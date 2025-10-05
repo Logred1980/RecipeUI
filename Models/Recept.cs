@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecipeUI.Models
+namespace RecipeUI.Models;
+
+public class Recept
 {
-    public class Recept
-    {
-        public int Id { get; set; }
-        public string Nev { get; set; } = string.Empty;
+    public int ReceptID { get; set; }
+    public string ReceptNev { get; set; } = string.Empty;
+    public string Elkeszites { get; set; } = string.Empty;
 
-        // Navigáció
-        public ICollection<ReceptOsszetevo> Osszetevok { get; set; } = new List<ReceptOsszetevo>();
-    }
+    // Navigáció
+    public ICollection<ReceptHozzavalo> Hozzavalok { get; set; } = new List<ReceptHozzavalo>();
 }
-
