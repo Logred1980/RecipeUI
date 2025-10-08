@@ -1,14 +1,20 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows; 
+using Microsoft.EntityFrameworkCore;
+using RecipeUI.Data;
 
-namespace RecipeUI
+namespace RecipeUI;
+
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    protected override void OnStartup(StartupEventArgs e)
     {
-    }
+        base.OnStartup(e);
 
+        var options = new DbContextOptionsBuilder<RecipeDbContext>()
+            .UseSqlite("Data Source=recipes.db")
+            .Options;
+
+        using var db = new RecipeDbContext(options);
+        db.Database.Migrate();
+    }
 }
