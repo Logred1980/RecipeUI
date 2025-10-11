@@ -5,38 +5,291 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RecipeUI"
         mc:Ignorable="d"
-        Title="Receptes könyv" Height="450" Width="800" Icon="/chef_ingredients_restaurant_and_food_recipe_book_cook_icon_251527.ico">
+        Title="Receptes könyv" Height="600" Width="1100" MinHeight="400" MinWidth="1000" Icon="/chef_ingredients_restaurant_and_food_recipe_book_cook_icon_251527.ico">
     <Grid>
-        <TabControl>
-            <TabItem Header="Receptek">
+        <TabControl x:Name="MainTabs">
+            <TabItem x:Name="tabRecept" Header="Receptek">
                 <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <ListView x:Name="RecipeList" Grid.Column="0" Margin="10,13,0,10" d:ItemsSource="{d:SampleData ItemCount=5}" Width="180">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="ID"  Width="30" DisplayMemberBinding="{Binding ID}" />
-                                <GridViewColumn Header="Receptek"  Width="150" DisplayMemberBinding="{Binding Name}" />
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                    <DataGrid x:Name="RecipeGrideView" Grid.Column="1" Margin="8,13,10,10" d:ItemsSource="{d:SampleData ItemCount=10}"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <DockPanel Grid.Row="0" LastChildFill="False" Margin="10,10,10,6">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button x:Name="BtnUjRecept" Content="Recept hozzáadása" Height="32" Width="160"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button x:Name="BtnHozzaad" Content="Hozzáadás a listához" Height="32" Width="160" Margin="0,0,8,0"/>
+                            <Button x:Name="BtnListaKeszit" Content="Lista készítése" Height="32" Width="140" Margin="0,0,8,0"/>
+                            <Button x:Name="BtnBeszerezve" Content="Beszerezve → Hűtő" Height="32" Width="160" Margin="0,0,8,0"/>
+                            <Button x:Name="BtnElkeszitve" Content="Elkészítve → Levonás" Height="32" Width="160"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- LENYÍLÓ SZERKESZTŐ PANEL (Expander helyett) -->
+                    <Border x:Name="AddRecipePanel"
+        Grid.Row="1"
+        Margin="10,0,10,6"
+        Background="#FFF9F9F9"
+        BorderBrush="#FFDADADA"
+        BorderThickness="1"
+        Padding="10"
+        Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <!-- űrlap sor: Név + Leírás -->
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="Auto"/>
+                                <!-- hozzávalók cím -->
+                                <RowDefinition Height="200"/>
+                                <!-- hozzávalók rács -->
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <!-- gombok -->
+                            </Grid.RowDefinitions>
+
+                            <!-- Név + Leírás -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="360"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Recept neve:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBox x:Name="TxtUjReceptNev"
+                     Grid.Column="1"
+                     Height="28"
+                     VerticalContentAlignment="Center"/>
+
+                                <TextBlock Grid.Column="3" Text="Elkészítés leírása:" VerticalAlignment="Top" Margin="0,0,6,0"/>
+                                <TextBox x:Name="TxtUjReceptLeiras"
+                     Grid.Column="4"
+                     Height="80"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"/>
+                            </Grid>
+
+                            <!-- Hozzávalók cím -->
+                            <TextBlock Grid.Row="2"
+                   Text="Hozzávalók"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+
+                            <!-- Hozzávalók rács -->
+                            <DataGrid x:Name="AddRecipeGrid"
+                  Grid.Row="3"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="True"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="False">
+                                <DataGrid.Columns>
+                                    <DataGridComboBoxColumn x:Name="AddRecipe_AlapanyagColumn"
+                                        Header="Alapanyag"
+                                        SelectedValueBinding="{Binding AlapanyagID, UpdateSourceTrigger=PropertyChanged}"
+                                        SelectedValuePath="AlapanyagID"
+                                        DisplayMemberPath="AlapanyagNev"
+                                        Width="*"/>
+                                    <DataGridTextColumn Header="Mennyiség"
+                                    Binding="{Binding Mennyiseg, UpdateSourceTrigger=PropertyChanged}"
+                                    Width="150"/>
+                                    <DataGridTextColumn Header="Mértékegység"
+                                    Binding="{Binding Mertekegyseg}"
+                                    IsReadOnly="True"
+                                    Width="150"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Mentés / Mégse -->
+                            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button x:Name="BtnUjReceptMegsem" Content="Mégse" Width="100" Height="32" Margin="0,0,8,0"/>
+                                <Button x:Name="BtnUjReceptMentes" Content="Mentés" Width="120" Height="32"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+
+                    <Grid Grid.Row="2" Margin="10,0,10,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="230"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="260"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <ListView x:Name="RecipeList" Grid.Column="0" Margin="0"
+                                  d:ItemsSource="{d:SampleData ItemCount=5}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding ID}"/>
+                                    <GridViewColumn Header="Receptek" Width="160" DisplayMemberBinding="{Binding Name}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="6"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="Kiválasztott recept részletei" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            
+                            <TextBlock x:Name="RecipeText"
+                                       Grid.Row="1"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,6"/>
+                            
+                            <DataGrid x:Name="RecipeGrideView"
+                                      Grid.Row="2"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Alapanyag" Binding="{Binding Alapanyag}" Width="*"/>
+                                    <DataGridTextColumn Header="Mennyiség" Binding="{Binding Mennyiseg}" Width="120"/>
+                                    <DataGridTextColumn Header="Mértékegység" Binding="{Binding Mertekegyseg}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Rectangle Grid.Row="3" Height="6" Fill="Transparent"/>
+
+                            <TextBlock Text="Bevásárlólista (hiányzó hozzávalók)" Grid.Row="4" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <DataGrid x:Name="ShoppingGrid" Grid.Row="5" AutoGenerateColumns="True" IsReadOnly="True"
+                                      d:ItemsSource="{d:SampleData ItemCount=6}"/>
+                        </Grid>
+                        
+                        <Grid Grid.Column="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="Kijelölt receptek" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <ListBox x:Name="SelectedRecipesList" Grid.Row="1" />
+                        </Grid>
+                    </Grid>
                 </Grid>
             </TabItem>
-            <TabItem Header="Hűtő">
+
+            <TabItem x:Name="tabRaktar" Header="Hűtő &amp; Spájz">
                 <Grid Background="#FFE5E5E5">
-                    <DataGrid x:Name="RefrigeratorStock" Grid.Column="1" Margin="10,58,10,10" d:ItemsSource="{d:SampleData ItemCount=10}"/>
-                    <Button x:Name="AddItem_RS" Content="Hozzáadás" HorizontalAlignment="Left" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="33" Width="100" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Grid Grid.Row="0" Margin="10,10,10,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="260"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Alapanyag:"/>
+                        <ComboBox x:Name="CmbAlapanyag"
+                                  Grid.Column="1" Height="28"
+                                  DisplayMemberPath="AlapanyagNev"
+                                  SelectedValuePath="AlapanyagID"/>
+
+                        <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,6,0" Text="Mennyiség:"/>
+                        <TextBox x:Name="TxtMennyiseg"
+                                 Grid.Column="4" Height="28" VerticalContentAlignment="Center"/>
+                        
+                        <TextBlock x:Name="LblUnit"
+                                   Grid.Column="5"
+                                   VerticalAlignment="Center"
+                                   Margin="6,0,0,0"
+                                   Text="{Binding SelectedItem.Mertekegyseg, ElementName=CmbAlapanyag}"
+                                   Opacity="0.8"/>
+
+                        <Button x:Name="AddItem_RS"
+                                Grid.Column="7"
+                                Width="120" Height="32"
+                                Content="Hozzáadás"
+                                Click="AddItem_RS_Click"/>
+                    </Grid>
+                    
+                    <DataGrid x:Name="RefrigeratorStock"
+                              Grid.Row="1"
+                              Margin="10,0,10,10"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="AlapanyagID" Binding="{Binding AlapanyagID}" Width="90"/>
+                            <DataGridTextColumn Header="Alapanyag" Binding="{Binding Alapanyag.AlapanyagNev}" Width="*"/>
+                            <DataGridTextColumn Header="Mértékegység" Binding="{Binding Alapanyag.Mertekegyseg}" Width="130"/>
+                            <DataGridTextColumn Header="Mennyiség" Binding="{Binding Mennyiseg}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
-            <TabItem Header="Hozzávalók">
-                <Grid Background="#FFE5E5E5">
-                    <DataGrid x:Name="ItemDB" Grid.Column="1" Margin="10,58,10,10" d:ItemsSource="{d:SampleData ItemCount=10}"/>
-                    <Button x:Name="AddItem_DB" Content="Hozzáadás" HorizontalAlignment="Left" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="33" Width="100" Margin="10,10,0,0" VerticalAlignment="Top"/>
+
+            <TabItem x:Name="tabHozzavalok" Header="Hozzávalók">
+                <Grid Background="#FFE5E5E5" Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="10,10,10,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Alapanyag neve:"/>
+                        <TextBox   x:Name="TxtAlapanyagNev" Grid.Column="1" Height="28" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,6,0" Text="Mértékegység:"/>
+                        <TextBox   x:Name="TxtMertekegyseg" Grid.Column="4" Height="28" VerticalContentAlignment="Center"/>
+
+                        <Button x:Name="AddItem_DB"
+                                Grid.Column="6"
+                                Width="120" Height="32"
+                                Content="Hozzáadás"
+                                Click="AddItem_DB_Click"/>
+                    </Grid>
+
+                    <DataGrid x:Name="ItemDB" Grid.Row="1" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Alapanyag ID"
+                                                Binding="{Binding AlapanyagID}"
+                                                SortMemberPath="AlapanyagID"
+                                                Width="80"/>
+                            <DataGridTextColumn Header="Alapanyag neve"
+                                                Binding="{Binding AlapanyagNev}"
+                                                SortMemberPath="AlapanyagNev"
+                                                Width="*"/>
+                            <DataGridTextColumn Header="Mértékegysége"
+                                                Binding="{Binding Mertekegyseg}"
+                                                SortMemberPath="Mertekegyseg"
+                                                Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
+
         </TabControl>
     </Grid>
 </Window>
