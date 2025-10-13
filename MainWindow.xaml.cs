@@ -18,10 +18,16 @@ namespace RecipeUI
         private readonly ReceptSzerviz _receptSzerviz;
         private CancellationTokenSource? _reloadCts;
 
-        // ==== ÚJ: Lenyíló szerkesztő állapot ====
+        // Lenyíló szerkesztő állapot
         private readonly ObservableCollection<AddRecipeRow> _addRecipeRows = new();
         private List<Alapanyag> _allIngredients = new();
 
+        // --- ÚJ: Kijelölt receptek neveinek gyűjteménye a jobb oldali listához ---
+        private readonly ObservableCollection<string> _selectedRecipes = new();
+
+        #region Általános
+
+        // Alap konstruktor: init, eseményfeliratkozások
         public MainWindow()
         {
             InitializeComponent();
@@ -32,21 +38,31 @@ namespace RecipeUI
             MainTabs.SelectionChanged += MainTabs_SelectionChanged;
             RecipeList.SelectionChanged += RecipeList_SelectionChanged;
 
-            BtnUjRecept.Click += BtnUjRecept_Click; 
+            BtnUjRecept.Click += BtnUjRecept_Click;
             BtnUjReceptMegsem.Click += BtnUjReceptMegsem_Click;
             BtnUjReceptMentes.Click += BtnUjReceptMentes_Click;
             AddRecipeGrid.CurrentCellChanged += (_, __) => SyncRowUnits();
             AddRecipeGrid.ItemsSource = _addRecipeRows;
 
-            // kötés a grid ItemsSource-ra
             AddRecipeGrid.ItemsSource = _addRecipeRows;
+
+            BtnHozzaad.Click += BtnHozzaad_Click;
+            SelectedRecipesList.ItemsSource = _selectedRecipes;
+
+            BtnListaKeszit.Click += BtnListaKeszit_Click;
+
+            BtnBeszerezve.Click += BtnBeszerezve_Click;
+
+            BtnElkeszitve.Click += BtnElkeszitve_Click;
         }
 
+        // Ablak betöltésekor - receptlista biztonságos újratöltése
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             await SafeReloadAsync();
         }
 
+        // Ablak bezárásakor - futó újratöltések leállítása
         private void MainWindow_Unloaded(object sender, RoutedEventArgs e)
         {
             _reloadCts?.Cancel();
@@ -54,6 +70,7 @@ namespace RecipeUI
             _reloadCts = null;
         }
 
+        // Tab váltás kezelése
         private async void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.OriginalSource is not TabControl) return;
@@ -73,6 +90,7 @@ namespace RecipeUI
             }
         }
 
+        // Biztonságos receptlista újratöltés megszakítható tokennel
         private async Task SafeReloadAsync()
         {
             _reloadCts?.Cancel();
@@ -92,6 +110,22 @@ namespace RecipeUI
             }
         }
 
+        // Közös decimális parse (vessző és pont)
+        private static bool TryParseDecimal(string input, out decimal value)
+        {
+            var styles = System.Globalization.NumberStyles.Number;
+            var cc = System.Globalization.CultureInfo.CurrentCulture;
+            if (decimal.TryParse(input, styles, cc, out value)) return true;
+
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            return decimal.TryParse(input, styles, inv, out value);
+        }
+
+        #endregion
+
+        #region tabRecept
+
+        // Receptnevek betöltése
         private async Task LoadRecipeListAsync(CancellationToken ct)
         {
             var recipeNames = await Task.Run(() =>
@@ -117,7 +151,7 @@ namespace RecipeUI
                 UpdateRecipeListUI(recipeNames);
         }
 
-        //RecipeList feltöltése
+        // Bal oldali receptlista összeállítása
         private void UpdateRecipeListUI(List<string> recipeNames)
         {
             recipeNames ??= new List<string>();
@@ -149,7 +183,7 @@ namespace RecipeUI
             RecipeList.ItemsSource = recipes;
         }
 
-        // Recept ID a felhasználónak
+        // Recepthez rövid azonosítók generálása
         private void GenerateRecipeIDs()
         {
             if (CommonDatas.RecipeIDList == null)
@@ -186,151 +220,7 @@ namespace RecipeUI
             }
         }
 
-        private void RefreshIngredientsGrid()
-        {
-            try
-            {
-                var list = _receptSzerviz.ListazAlapanyagok();
-                ItemDB.ItemsSource = list;
-                ItemDB.Items.Refresh();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Hiba az alapanyagok listázásakor: {ex.Message}", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void AddItem_DB_Click(object sender, RoutedEventArgs e)
-        {
-            var nev = (TxtAlapanyagNev.Text ?? string.Empty).Trim();
-            var mertek = (TxtMertekegyseg.Text ?? string.Empty).Trim();
-
-            if (string.IsNullOrWhiteSpace(nev))
-            {
-                MessageBox.Show("Add meg az alapanyag nevét!", "Hiányzó adat",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                TxtAlapanyagNev.Focus();
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(mertek))
-            {
-                MessageBox.Show("Add meg a mértékegységet!", "Hiányzó adat",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                TxtMertekegyseg.Focus();
-                return;
-            }
-
-            try
-            {
-                var ok = _receptSzerviz.HozzaadAlapanyag(nev, mertek);
-                if (!ok)
-                {
-                    MessageBox.Show("Már létezik ilyen nevű alapanyag.", "Nem sikerült",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-
-                TxtAlapanyagNev.Clear();
-                TxtMertekegyseg.Clear();
-                TxtAlapanyagNev.Focus();
-
-                RefreshIngredientsGrid();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Mentési hiba: {ex.Message}", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void RefreshStockGrid()
-        {
-            try
-            {
-                var list = _receptSzerviz.ListazRaktart()
-                                         .OrderBy(r => r.Alapanyag.AlapanyagNev)
-                                         .ToList();
-                RefrigeratorStock.ItemsSource = list;
-                RefrigeratorStock.Items.Refresh();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Hiba a készlet listázásakor: {ex.Message}", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void LoadAlapanyagCombo()
-        {
-            try
-            {
-                var alapanyagok = _receptSzerviz.ListazAlapanyagok();
-                CmbAlapanyag.ItemsSource = alapanyagok;
-                CmbAlapanyag.Items.Refresh();
-                if (CmbAlapanyag.SelectedIndex < 0 && alapanyagok.Count > 0)
-                    CmbAlapanyag.SelectedIndex = 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Hiba az alapanyagok betöltésekor: {ex.Message}", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void AddItem_RS_Click(object sender, RoutedEventArgs e)
-        {
-            if (CmbAlapanyag.SelectedValue == null)
-            {
-                MessageBox.Show("Válassz alapanyagot!", "Hiányzó adat",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                CmbAlapanyag.Focus();
-                return;
-            }
-
-            var txt = (TxtMennyiseg.Text ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(txt))
-            {
-                MessageBox.Show("Add meg a mennyiséget!", "Hiányzó adat",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                TxtMennyiseg.Focus();
-                return;
-            }
-
-            if (!TryParseDecimal(txt, out var qty) || qty <= 0)
-            {
-                MessageBox.Show("Érvénytelen mennyiség.", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                TxtMennyiseg.SelectAll();
-                TxtMennyiseg.Focus();
-                return;
-            }
-
-            try
-            {
-                int alapanyagId = (int)CmbAlapanyag.SelectedValue;
-                _receptSzerviz.HozzaadRaktarhoz(alapanyagId, qty);
-
-                TxtMennyiseg.Clear();
-                RefreshStockGrid();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Mentési hiba: {ex.Message}", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private static bool TryParseDecimal(string input, out decimal value)
-        {
-            var styles = System.Globalization.NumberStyles.Number;
-            var cc = System.Globalization.CultureInfo.CurrentCulture;
-            if (decimal.TryParse(input, styles, cc, out value)) return true;
-
-            var inv = System.Globalization.CultureInfo.InvariantCulture;
-            return decimal.TryParse(input, styles, inv, out value);
-        }
-
+        // Bal oldalon recept kiválasztása
         private void RecipeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (RecipeList.SelectedItem is RecipeInfo info)
@@ -343,6 +233,7 @@ namespace RecipeUI
             }
         }
 
+        // Kijelölt recept betöltése és megjelenítése a középső panelen
         private void ShowSelectedRecipe(string recipeName)
         {
             try
@@ -379,6 +270,7 @@ namespace RecipeUI
             }
         }
 
+        // Kijelölt recept megjelenítő elemek ürítése
         private void ClearRecipeView()
         {
             RecipeText.Inlines.Clear();
@@ -386,6 +278,7 @@ namespace RecipeUI
             RecipeGrideView.Items.Refresh();
         }
 
+        // Felső szövegmező (név félkövér + új sor + leírás) beállítása
         private void SetRecipeText(string name, string description)
         {
             RecipeText.Inlines.Clear();
@@ -395,6 +288,7 @@ namespace RecipeUI
                 RecipeText.Inlines.Add(new System.Windows.Documents.Run(description));
         }
 
+        // Recept hozzáadás panel nyitása/zárása a jobb felső gombbal
         private void BtnUjRecept_Click(object? sender, RoutedEventArgs e)
         {
             if (AddRecipePanel.Visibility != Visibility.Visible)
@@ -403,7 +297,7 @@ namespace RecipeUI
                 AddRecipePanel.Visibility = Visibility.Collapsed;
         }
 
-
+        // Recept hozzáadás panel előkészítése és megnyitása
         private void OpenAddRecipeEditor()
         {
             try
@@ -428,10 +322,13 @@ namespace RecipeUI
             }
         }
 
+        // Recept hozzáadás panel bezárása mentés nélkül
         private void BtnUjReceptMegsem_Click(object? sender, RoutedEventArgs e)
         {
             AddRecipePanel.Visibility = Visibility.Collapsed;
         }
+
+        // Új recept mentése a lenyíló szerkesztőből
         private void BtnUjReceptMentes_Click(object? sender, RoutedEventArgs e)
         {
             var nev = (TxtUjReceptNev.Text ?? string.Empty).Trim();
@@ -495,6 +392,8 @@ namespace RecipeUI
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        // Lenyíló rács soraiban a mértékegységek szinkronizálása az alapanyag alapján
         private void SyncRowUnits()
         {
             if (_allIngredients == null || _allIngredients.Count == 0) return;
@@ -512,10 +411,455 @@ namespace RecipeUI
             }
         }
 
+        // --- ÚJ: "Hozzáadás a listához" gomb – bal oldali kijelölt recept nevét hozzáadja a jobb oldali listához ---
+        private void BtnHozzaad_Click(object sender, RoutedEventArgs e)
+        {
+            if (RecipeList.SelectedItem is not RecipeInfo info)
+            {
+                MessageBox.Show("Válassz ki egy receptet a listából!", "Nincs kiválasztás",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
+            var name = (info.Name ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            if (!_selectedRecipes.Contains(name))
+            {
+                _selectedRecipes.Add(name);
+            }
+        }
+
+        // „Lista készítése” gomb – a jobb oldali listában lévő receptek összesített hiányzó hozzávalóit számolja és megjeleníti
+        private void BtnListaKeszit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedRecipes.Count == 0)
+            {
+                MessageBox.Show("A jobb oldali listában nincs egy recept sem. Előbb adj hozzá recepteket!", "Nincs adat",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            List<Recept> allRecipes;
+            List<Raktar> stock;
+
+            try
+            {
+                allRecipes = _receptSzerviz.ListazRecepteket();
+                stock = _receptSzerviz.ListazRaktart();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba az adatok betöltésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var selectedSet = new HashSet<string>(_selectedRecipes, StringComparer.OrdinalIgnoreCase);
+
+            var requiredByIngredient = new Dictionary<int, (string Nev, string Mertekegyseg, decimal Ossz)>();
+
+            foreach (var rec in allRecipes)
+            {
+                if (!selectedSet.Contains(rec.ReceptNev)) continue;
+
+                foreach (var h in rec.Hozzavalok)
+                {
+                    var id = h.AlapanyagID;
+                    var nev = h.Alapanyag.AlapanyagNev;
+                    var mertek = h.Alapanyag.Mertekegyseg;
+                    var qty = h.SzükségesMennyiseg;
+
+                    if (requiredByIngredient.TryGetValue(id, out var agg))
+                        requiredByIngredient[id] = (nev, mertek, agg.Ossz + qty);
+                    else
+                        requiredByIngredient[id] = (nev, mertek, qty);
+                }
+            }
+
+            var stockByIngredient = stock.ToDictionary(r => r.AlapanyagID, r => r.Mennyiseg);
+
+            var shopping = new List<ShoppingRow>();
+            foreach (var kvp in requiredByIngredient)
+            {
+                var id = kvp.Key;
+                var (nev, mertek, need) = kvp.Value;
+                var have = stockByIngredient.TryGetValue(id, out var s) ? s : 0m;
+                var missing = need - have;
+                if (missing > 0)
+                {
+                    shopping.Add(new ShoppingRow
+                    {
+                        Alapanyag = nev,
+                        HianyMennyiseg = missing,
+                        Mertekegyseg = mertek
+                    });
+                }
+            }
+
+            var ordered = shopping.OrderBy(x => x.Alapanyag).ToList();
+            ShoppingGrid.ItemsSource = ordered.Count > 0 ? ordered : null;
+            ShoppingGrid.Items.Refresh();
+
+            if (ordered.Count == 0)
+            {
+                MessageBox.Show("Minden hozzávaló megvan a Hűtő & Spájz készletben. Nincs hiány.", "Kész 🎉",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        // „Beszerezve → Hűtő” gomb – a jobb oldali listában lévő receptek alapján számolt hiányt hozzáadja a raktárhoz
+        private void BtnBeszerezve_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedRecipes.Count == 0)
+            {
+                MessageBox.Show("A jobb oldali listában nincs egy recept sem. Előbb adj hozzá recepteket!", "Nincs adat",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            List<Recept> allRecipes;
+            List<Raktar> stock;
+
+            try
+            {
+                allRecipes = _receptSzerviz.ListazRecepteket();
+                stock = _receptSzerviz.ListazRaktart();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba az adatok betöltésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var selectedSet = new HashSet<string>(_selectedRecipes, StringComparer.OrdinalIgnoreCase);
+
+            var requiredByIngredient = new Dictionary<int, (string Nev, string Mertekegyseg, decimal Ossz)>();
+            foreach (var rec in allRecipes)
+            {
+                if (!selectedSet.Contains(rec.ReceptNev)) continue;
+
+                foreach (var h in rec.Hozzavalok)
+                {
+                    var id = h.AlapanyagID;
+                    var nev = h.Alapanyag.AlapanyagNev;
+                    var mertek = h.Alapanyag.Mertekegyseg;
+                    var qty = h.SzükségesMennyiseg;
+
+                    if (requiredByIngredient.TryGetValue(id, out var agg))
+                        requiredByIngredient[id] = (nev, mertek, agg.Ossz + qty);
+                    else
+                        requiredByIngredient[id] = (nev, mertek, qty);
+                }
+            }
+
+            if (requiredByIngredient.Count == 0)
+            {
+                MessageBox.Show("A kijelölt recepteknek nincs hozzávalója.", "Nincs adat",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var stockByIngredient = stock.ToDictionary(r => r.AlapanyagID, r => r.Mennyiseg);
+
+            var toAdd = new List<(int Id, decimal Qty)>();
+            foreach (var kvp in requiredByIngredient)
+            {
+                var id = kvp.Key;
+                var need = kvp.Value.Ossz;
+                var have = stockByIngredient.TryGetValue(id, out var s) ? s : 0m;
+                var missing = need - have;
+                if (missing > 0m)
+                    toAdd.Add((id, missing));
+            }
+
+            if (toAdd.Count == 0)
+            {
+                MessageBox.Show("Minden hozzávaló megvan. Nincs mit hozzáadni a raktárhoz.", "Kész",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                _selectedRecipes.Clear();
+                SelectedRecipesList.Items.Refresh();
+                ShoppingGrid.ItemsSource = null;
+                ShoppingGrid.Items.Refresh();
+                return;
+            }
+
+            try
+            {
+                foreach (var (id, qty) in toAdd)
+                    _receptSzerviz.HozzaadRaktarhoz(id, qty);
+
+                RefreshStockGrid();
+
+                _selectedRecipes.Clear();
+                SelectedRecipesList.Items.Refresh();
+
+                ShoppingGrid.ItemsSource = null;
+                ShoppingGrid.Items.Refresh();
+
+                MessageBox.Show("A bevásárlólista tételeit hozzáadtuk a Hűtő & Spájz készlethez.", "Siker",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Mentési hiba a raktár frissítésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // „Elkészítve → Levonás” gomb – a jobb oldali listában lévő receptek hozzávalóit levonja a raktárból (negatív készlet nélkül)
+        private void BtnElkeszitve_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedRecipes.Count == 0)
+            {
+                MessageBox.Show("A jobb oldali listában nincs egy recept sem. Előbb adj hozzá recepteket!", "Nincs adat",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            List<Recept> allRecipes;
+            try
+            {
+                allRecipes = _receptSzerviz.ListazRecepteket();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba a receptek betöltésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var selectedSet = new HashSet<string>(_selectedRecipes, StringComparer.OrdinalIgnoreCase);
+
+            var requiredByIngredient = new Dictionary<int, decimal>();
+            foreach (var rec in allRecipes)
+            {
+                if (!selectedSet.Contains(rec.ReceptNev)) continue;
+
+                foreach (var h in rec.Hozzavalok)
+                {
+                    var id = h.AlapanyagID;
+                    var qty = h.SzükségesMennyiseg;
+
+                    if (requiredByIngredient.ContainsKey(id))
+                        requiredByIngredient[id] += qty;
+                    else
+                        requiredByIngredient[id] = qty;
+                }
+            }
+
+            if (requiredByIngredient.Count == 0)
+            {
+                MessageBox.Show("A kijelölt receptekhez nem találtunk hozzávalókat.", "Nincs adat",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Készlet beolvasása egyszer, és szótárba rendezve
+            List<Raktar> stockList;
+            try
+            {
+                stockList = _receptSzerviz.ListazRaktart();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba a készlet betöltésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var stockByIngredient = stockList.ToDictionary(r => r.AlapanyagID, r => r.Mennyiseg);
+
+            try
+            {
+                foreach (var kvp in requiredByIngredient)
+                {
+                    var alapanyagId = kvp.Key;
+                    var osszSzukseges = kvp.Value;
+
+                    var have = stockByIngredient.TryGetValue(alapanyagId, out var current) ? current : 0m;
+
+                    // Ennyit lehet ÉRDEMBEN levonni: a kisebbiket a szükséges és a meglévő közül
+                    var consume = Math.Min(osszSzukseges, have);
+
+                    if (consume > 0m)
+                    {
+                        _receptSzerviz.HozzaadRaktarhoz(alapanyagId, -consume);
+                    }
+                    // Ha consume == 0 → nincs mit levonni, és NEM engedünk mínuszba
+                }
+
+                RefreshStockGrid();
+
+                _selectedRecipes.Clear();
+                SelectedRecipesList.Items.Refresh();
+
+                MessageBox.Show("A kiválasztott receptek hozzávalóit levontuk a Hűtő & Spájz készletből (negatív készlet nélkül).", "Siker",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba a raktár frissítésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
+        #endregion
+        #region tabHozzavalok
+
+        // Hozzávalók rács frissítése
+        private void RefreshIngredientsGrid()
+        {
+            try
+            {
+                var list = _receptSzerviz.ListazAlapanyagok();
+                ItemDB.ItemsSource = list;
+                ItemDB.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba az alapanyagok listázásakor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Új alapanyag hozzáadása (név + mértékegység)
+        private void AddItem_DB_Click(object sender, RoutedEventArgs e)
+        {
+            var nev = (TxtAlapanyagNev.Text ?? string.Empty).Trim();
+            var mertek = (TxtMertekegyseg.Text ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(nev))
+            {
+                MessageBox.Show("Add meg az alapanyag nevét!", "Hiányzó adat",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtAlapanyagNev.Focus();
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(mertek))
+            {
+                MessageBox.Show("Add meg a mértékegységet!", "Hiányzó adat",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtMertekegyseg.Focus();
+                return;
+            }
+
+            try
+            {
+                var ok = _receptSzerviz.HozzaadAlapanyag(nev, mertek);
+                if (!ok)
+                {
+                    MessageBox.Show("Már létezik ilyen nevű alapanyag.", "Nem sikerült",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                TxtAlapanyagNev.Clear();
+                TxtMertekegyseg.Clear();
+                TxtAlapanyagNev.Focus();
+
+                RefreshIngredientsGrid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Mentési hiba: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+
+        #region tabRaktar
+
+        // Raktár tab: alapanyag combo feltöltése
+        private void LoadAlapanyagCombo()
+        {
+            try
+            {
+                var alapanyagok = _receptSzerviz.ListazAlapanyagok();
+                CmbAlapanyag.ItemsSource = alapanyagok;
+                CmbAlapanyag.Items.Refresh();
+                if (CmbAlapanyag.SelectedIndex < 0 && alapanyagok.Count > 0)
+                    CmbAlapanyag.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba az alapanyagok betöltésekor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Raktár rács frissítése név szerinti rendezéssel
+        private void RefreshStockGrid()
+        {
+            try
+            {
+                var list = _receptSzerviz.ListazRaktart()
+                                 .Where(r => r.Mennyiseg > 0m)
+                                 .OrderBy(r => r.Alapanyag.AlapanyagNev)
+                                 .ToList();
+
+                RefrigeratorStock.ItemsSource = list;
+                RefrigeratorStock.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hiba a készlet listázásakor: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Készlethez hozzáadás a kiválasztott alapanyaggal és mennyiséggel
+        private void AddItem_RS_Click(object sender, RoutedEventArgs e)
+        {
+            if (CmbAlapanyag.SelectedValue == null)
+            {
+                MessageBox.Show("Válassz alapanyagot!", "Hiányzó adat",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                CmbAlapanyag.Focus();
+                return;
+            }
+
+            var txt = (TxtMennyiseg.Text ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(txt))
+            {
+                MessageBox.Show("Add meg a mennyiséget!", "Hiányzó adat",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtMennyiseg.Focus();
+                return;
+            }
+
+            if (!TryParseDecimal(txt, out var qty) || qty <= 0)
+            {
+                MessageBox.Show("Érvénytelen mennyiség.", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtMennyiseg.SelectAll();
+                TxtMennyiseg.Focus();
+                return;
+            }
+
+            try
+            {
+                int alapanyagId = (int)CmbAlapanyag.SelectedValue;
+                _receptSzerviz.HozzaadRaktarhoz(alapanyagId, qty);
+
+                TxtMennyiseg.Clear();
+                RefreshStockGrid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Mentési hiba: {ex.Message}", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
     }
 
-    // ==== DTO-k ====
+    #region DTO-k
 
     public class ReceptReszletRow
     {
@@ -537,7 +881,6 @@ namespace RecipeUI
             set { if (_alapanyagId != value) { _alapanyagId = value; OnPropertyChanged(nameof(AlapanyagID)); } }
         }
 
-        // szövegként tároljuk, hogy a user tudjon 0,5 / 0.5-öt írni; mentésnél parse-oljuk
         public string Mennyiseg
         {
             get => _mennyiseg;
@@ -553,4 +896,14 @@ namespace RecipeUI
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
     }
+
+    public class ShoppingRow
+    {
+        public string Alapanyag { get; set; } = string.Empty;
+        public decimal HianyMennyiseg { get; set; }
+        public string Mertekegyseg { get; set; } = string.Empty;
+    }
+
+
+    #endregion
 }
