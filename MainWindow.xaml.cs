@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 
 namespace RecipeUI
 {
@@ -24,6 +26,8 @@ namespace RecipeUI
 
         // --- ÚJ: Kijelölt receptek neveinek gyűjteménye a jobb oldali listához ---
         private readonly ObservableCollection<string> _selectedRecipes = new();
+
+        private bool _isDarkTheme = false;
 
         #region Általános
 
@@ -41,12 +45,14 @@ namespace RecipeUI
             BtnUjRecept.Click += BtnUjRecept_Click;
             BtnUjReceptMegsem.Click += BtnUjReceptMegsem_Click;
             BtnUjReceptMentes.Click += BtnUjReceptMentes_Click;
+            BtnThemeToggle.Click += BtnThemeToggle_Click;
+
+
             AddRecipeGrid.CurrentCellChanged += (_, __) => SyncRowUnits();
             AddRecipeGrid.ItemsSource = _addRecipeRows;
-
             AddRecipeGrid.ItemsSource = _addRecipeRows;
-
             BtnHozzaad.Click += BtnHozzaad_Click;
+
             SelectedRecipesList.ItemsSource = _selectedRecipes;
 
             BtnListaKeszit.Click += BtnListaKeszit_Click;
@@ -54,6 +60,8 @@ namespace RecipeUI
             BtnBeszerezve.Click += BtnBeszerezve_Click;
 
             BtnElkeszitve.Click += BtnElkeszitve_Click;
+
+            SetTheme(isDark: false);
         }
 
         // Ablak betöltésekor - receptlista biztonságos újratöltése
@@ -378,7 +386,6 @@ namespace RecipeUI
                     return;
                 }
 
-                // siker → panel zár, mezők tisztítás, bal lista frissítés
                 AddRecipePanel.Visibility = Visibility.Collapsed;
                 _addRecipeRows.Clear();
                 TxtUjReceptNev.Clear();
@@ -391,6 +398,30 @@ namespace RecipeUI
                 MessageBox.Show($"Mentési hiba: {ex.Message}", "Hiba",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // Színváltó gomb
+        private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            SetTheme(!_isDarkTheme);
+        }
+
+        private void SetTheme(bool isDark)
+        {
+            var dicts = Application.Current.Resources.MergedDictionaries;
+            dicts.Clear();
+            if (isDark)
+            {
+                dicts.Add(new ResourceDictionary { Source = new Uri("Themes/Dark.xaml", UriKind.Relative) });
+                ImgTheme.Source = new BitmapImage(new Uri("Assets/sun.png", UriKind.Relative));
+            }
+            else
+            {
+                dicts.Add(new ResourceDictionary { Source = new Uri("Themes/Light.xaml", UriKind.Relative) });
+                ImgTheme.Source = new BitmapImage(new Uri("Assets/moon.png", UriKind.Relative));
+            }
+
+            _isDarkTheme = isDark;
         }
 
         // Lenyíló rács soraiban a mértékegységek szinkronizálása az alapanyag alapján
@@ -411,7 +442,6 @@ namespace RecipeUI
             }
         }
 
-        // --- ÚJ: "Hozzáadás a listához" gomb – bal oldali kijelölt recept nevét hozzáadja a jobb oldali listához ---
         private void BtnHozzaad_Click(object sender, RoutedEventArgs e)
         {
             if (RecipeList.SelectedItem is not RecipeInfo info)
@@ -430,7 +460,6 @@ namespace RecipeUI
             }
         }
 
-        // „Lista készítése” gomb – a jobb oldali listában lévő receptek összesített hiányzó hozzávalóit számolja és megjeleníti
         private void BtnListaKeszit_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedRecipes.Count == 0)
@@ -508,7 +537,6 @@ namespace RecipeUI
             }
         }
 
-        // „Beszerezve → Hűtő” gomb – a jobb oldali listában lévő receptek alapján számolt hiányt hozzáadja a raktárhoz
         private void BtnBeszerezve_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedRecipes.Count == 0)

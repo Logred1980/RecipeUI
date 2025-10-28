@@ -1,0 +1,102 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="App.Background"        Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="App.Panel"             Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="App.ControlBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="App.InputBackground"   Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="App.Border"            Color="#D6D6D6"/>
+    <SolidColorBrush x:Key="App.Foreground"        Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="App.Muted"             Color="#4A4A4A"/>
+    <SolidColorBrush x:Key="App.Accent"            Color="#2F74C0"/>
+
+    <Style TargetType="Window">
+        <Setter Property="Background" Value="{DynamicResource App.Background}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+    </Style>
+
+    <Style TargetType="TabControl">
+        <Setter Property="Background" Value="{DynamicResource App.Panel}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="Background" Value="{DynamicResource App.Panel}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource App.ControlBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource App.InputBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource App.Accent}"/>
+    </Style>
+
+    <Style TargetType="ComboBox">
+        <Setter Property="Background" Value="{DynamicResource App.InputBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="ListBox">
+        <Setter Property="Background" Value="{DynamicResource App.ControlBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="ListView">
+        <Setter Property="Background" Value="{DynamicResource App.ControlBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+    </Style>
+
+    <Style TargetType="DataGrid">
+        <Style.Resources>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#CFE3FF"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}"   Color="#CFE3FF"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#1A1A1A"/>
+        </Style.Resources>
+
+        <Setter Property="Background" Value="{DynamicResource App.ControlBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+        <Setter Property="RowBackground" Value="#FFFFFF"/>
+        <Setter Property="AlternatingRowBackground" Value="#FAFAFA"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource App.Border}"/>
+        <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource App.Border}"/>
+        <Setter Property="EnableRowVirtualization" Value="True"/>
+        <Setter Property="ColumnHeaderHeight" Value="26"/>
+        <Setter Property="RowHeight" Value="26"/>
+        <Setter Property="ColumnHeaderStyle">
+            <Setter.Value>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="{DynamicResource App.Panel}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource App.Muted}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <Style TargetType="ScrollViewer">
+        <Setter Property="Background" Value="{DynamicResource App.InputBackground}"/>
+    </Style>
+
+</ResourceDictionary>

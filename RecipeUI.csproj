@@ -9,6 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\moon.png" />
+    <None Remove="Assets\sun.png" />
     <None Remove="chef_ingredients_restaurant_and_food_recipe_book_cook_icon_251527.ico" />
   </ItemGroup>
 
@@ -26,6 +28,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\moon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\sun.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="chef_ingredients_restaurant_and_food_recipe_book_cook_icon_251527.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
