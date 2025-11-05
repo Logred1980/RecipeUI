@@ -170,8 +170,18 @@
         <Setter Property="ColumnHeaderStyle">
             <Setter.Value>
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="{DynamicResource App.Panel}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource App.Muted}"/>
+                    <Setter Property="Background"  Value="{DynamicResource App.Panel}"/>
+                    <Setter Property="Foreground"  Value="{DynamicResource App.Muted}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        
+        <Setter Property="RowHeaderStyle">
+            <Setter.Value>
+                <Style TargetType="DataGridRowHeader">
+                    <Setter Property="Background"  Value="{DynamicResource App.Panel}"/>
+                    <Setter Property="Foreground"  Value="{DynamicResource App.Muted}"/>
                     <Setter Property="BorderBrush" Value="{DynamicResource App.Border}"/>
                 </Style>
             </Setter.Value>
@@ -205,11 +215,9 @@
     <Style TargetType="ScrollViewer">
         <Setter Property="Background" Value="{DynamicResource App.InputBackground}"/>
     </Style>
-
-    <!-- ComboBox: csak színek, méret NEM változik -->
+    
     <Style TargetType="{x:Type ComboBox}">
         <Style.Resources>
-            <!-- Popup/legördülő háttere + rendszer kék felülírása sötétre -->
             <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}"        Color="#2B2B2B"/>
             <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}"       Color="#2B2B2B"/>
             <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"     Color="#444444"/>
@@ -241,5 +249,5 @@
             </Setter>
         </Style.Setters>
     </Style>
-
+    
 </ResourceDictionary>

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RecipeUI.Services
 {
-    class ReceptSzerviz : IReceptSzerviz
+    public class ReceptSzerviz : IReceptSzerviz
     {
         private readonly RecipeDbContext _context;
 
