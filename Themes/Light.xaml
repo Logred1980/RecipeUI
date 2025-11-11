@@ -94,9 +94,6 @@
         </Setter>
     </Style>
 
-
-    <Style TargetType="ScrollViewer">
-        <Setter Property="Background" Value="{DynamicResource App.InputBackground}"/>
-    </Style>
+    <Style x:Key="ComboBox.EditingInGrid" TargetType="ComboBox"/>
 
 </ResourceDictionary>

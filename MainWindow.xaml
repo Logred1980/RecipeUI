@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Receptes könyv" Height="600" Width="1100" MinHeight="400" MinWidth="1000" Icon="/Assets/chef_icon.ico">
     <Grid Background="{DynamicResource App.WindowBg}">
-        <TabControl x:Name="MainTabs">
+        <TabControl x:Name="MainTabs" SelectionChanged="MainTabs_SelectionChanged">
             <TabItem x:Name="tabRecept" Header="Receptek">
                 <Grid Background="{DynamicResource App.PanelBg}">
                     <Grid.RowDefinitions>
@@ -28,8 +28,8 @@
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <Button Command="{Binding AddToSelectedCommand}" Content="Hozzáadás a listához" Height="32" Width="160" Margin="0,0,8,0"/>
                             <Button Command="{Binding GenerateShoppingListCommand}" Content="Lista készítése" Height="32" Width="140" Margin="0,0,8,0"/>
-                            <Button x:Name="BtnBeszerezve" Content="Beszerezve → Hűtő" Height="32" Width="160" Margin="0,0,8,0"/>
-                            <Button x:Name="BtnElkeszitve" Content="Elkészítve → Levonás" Height="32" Width="160"/>
+                            <Button x:Name="BtnBeszerezve" Command="{Binding BeszerezveCommand}" Content="Beszerezve → Hűtő" Height="32" Width="160" Margin="0,0,8,0"/>
+                            <Button x:Name="BtnElkeszitve" Command="{Binding ElkeszitveCommand}" Content="Elkészítve → Levonás" Height="32" Width="160"/>
                         </StackPanel>
                     </DockPanel>
 
@@ -62,7 +62,8 @@
                                 <TextBox x:Name="TxtUjReceptNev"
                                          Grid.Column="1"
                                          Height="28"
-                                         VerticalContentAlignment="Center"/>
+                                         VerticalContentAlignment="Center"
+                                         Text="{Binding ReceptNev, UpdateSourceTrigger=PropertyChanged}"/>
 
                                 <TextBlock Grid.Column="3" Text="Elkészítés leírása:" VerticalAlignment="Top" Margin="0,0,6,0"/>
                                 <TextBox x:Name="TxtUjReceptLeiras"
@@ -70,7 +71,8 @@
                                          Height="80"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
-                                         VerticalScrollBarVisibility="Auto"/>
+                                         VerticalScrollBarVisibility="Auto"
+                                         Text="{Binding Leiras, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
 
                             <TextBlock Grid.Row="2"
@@ -87,25 +89,42 @@
                                       ItemsSource="{Binding Sorok}">
                                 <DataGrid.Columns>
                                     <DataGridComboBoxColumn x:Name="AddRecipe_AlapanyagColumn"
-                                        ItemsSource="{Binding Alapanyagok}"
-                                        Header="Alapanyag"
-                                        SelectedValueBinding="{Binding AlapanyagID, UpdateSourceTrigger=PropertyChanged}"
-                                        SelectedValuePath="AlapanyagID"
-                                        DisplayMemberPath="AlapanyagNev"
-                                        Width="*"/>
+                                                            Header="Alapanyag"
+                                                            SelectedValueBinding="{Binding AlapanyagID, UpdateSourceTrigger=PropertyChanged}"
+                                                            SelectedValuePath="AlapanyagID"
+                                                            DisplayMemberPath="AlapanyagNev"
+                                                            Width="*">
+
+                                        <DataGridComboBoxColumn.ElementStyle>
+                                            <Style TargetType="ComboBox">
+                                                <Setter Property="ItemsSource"
+                                                        Value="{Binding DataContext.Alapanyagok, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                                <Setter Property="IsHitTestVisible" Value="False"/>
+                                                <Setter Property="Focusable" Value="False"/>
+                                            </Style>
+                                        </DataGridComboBoxColumn.ElementStyle>
+
+                                        <DataGridComboBoxColumn.EditingElementStyle>
+                                            <Style TargetType="ComboBox" BasedOn="{StaticResource ComboBox.EditingInGrid}">
+                                                <Setter Property="ItemsSource"
+                                                        Value="{Binding DataContext.Alapanyagok, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                                            </Style>
+                                        </DataGridComboBoxColumn.EditingElementStyle>
+                                    </DataGridComboBoxColumn>
+
                                     <DataGridTextColumn Header="Mennyiség"
-                                    Binding="{Binding Mennyiseg, UpdateSourceTrigger=PropertyChanged}"
-                                    Width="150"/>
+                                                        Binding="{Binding Mennyiseg, UpdateSourceTrigger=PropertyChanged}"
+                                                        Width="150"/>   
                                     <DataGridTextColumn Header="Mértékegység"
-                                    Binding="{Binding Mertekegyseg}"
-                                    IsReadOnly="True"
-                                    Width="150"/>
+                                                        Binding="{Binding Mertekegyseg}"
+                                                        IsReadOnly="True"
+                                                        Width="150"/>
                                 </DataGrid.Columns>
                             </DataGrid>
 
                             <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <Button x:Name="BtnUjReceptMegsem" Click="OnRecipeAddRequested" Content="Mégse" Width="100" Height="32" Margin="0,0,8,0"/>
-                                <Button x:Name="BtnUjReceptMentes" Content="Mentés" Width="120" Height="32"/>
+                                <Button x:Name="BtnUjReceptMentes" Content="Mentés" Width="120" Height="32" Command="{Binding SaveCommand}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -214,13 +233,18 @@
 
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Alapanyag:"/>
                         <ComboBox x:Name="CmbAlapanyag"
-                                  Grid.Column="1" Height="28"
+                                  Grid.Column="1" 
+                                  Height="28"
                                   DisplayMemberPath="AlapanyagNev"
-                                  SelectedValuePath="AlapanyagID"/>
+                                  SelectedItem="{Binding SelectedAlapanyag, Mode=TwoWay}"
+                                  ItemsSource="{Binding AlapanyagLista}"/>
 
                         <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,6,0" Text="Mennyiség:"/>
-                        <TextBox x:Name="TxtMennyiseg"
-                                 Grid.Column="4" Height="28" VerticalContentAlignment="Center"/>
+                        <TextBox x:Name="TxtMennyiseg" 
+                                 Grid.Column="4" 
+                                 Height="28" 
+                                 VerticalContentAlignment="Center"
+                                 Text="{Binding UjMennyiseg, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock x:Name="LblUnit"
                                    Grid.Column="5"
@@ -231,12 +255,14 @@
 
                         <Button x:Name="AddItem_RS"
                                 Grid.Column="7"
-                                Width="120" Height="32"
+                                Width="120" 
+                                Height="32"
                                 Content="Hozzáadás"
-                                Click="AddItem_RS_Click"/>
+                                Command="{Binding AddToRaktarCommand}"/>
                     </Grid>
 
                     <DataGrid x:Name="RefrigeratorStock"
+                              ItemsSource="{Binding RaktarLista}"
                               Grid.Row="1"
                               Margin="10,0,10,10"
                               AutoGenerateColumns="False"
@@ -255,14 +281,15 @@
                 <Grid Background="{DynamicResource App.PanelBg}" Margin="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="14*"/>
-                        <ColumnDefinition Width="533*"/>
+                        <ColumnDefinition Width="37*"/>
+                        <ColumnDefinition Width="496*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="10,10,10,6" Grid.ColumnSpan="2">
+                    <Grid Grid.Row="0" Margin="10,10,10,6" Grid.ColumnSpan="3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="220"/>
@@ -274,19 +301,34 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Alapanyag neve:"/>
-                        <TextBox   x:Name="TxtAlapanyagNev" Grid.Column="1" Height="28" VerticalContentAlignment="Center"/>
+                        <TextBox   x:Name="TxtAlapanyagNev" 
+                                   Grid.Column="1" 
+                                   Height="28" 
+                                   VerticalContentAlignment="Center" 
+                                   Text="{Binding UjAlapanyagNev, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,6,0" Text="Mértékegység:"/>
-                        <TextBox   x:Name="TxtMertekegyseg" Grid.Column="4" Height="28" VerticalContentAlignment="Center"/>
+                        <TextBox   x:Name="TxtMertekegyseg" 
+                                   Grid.Column="4" 
+                                   Height="28" 
+                                   VerticalContentAlignment="Center" 
+                                   Text="{Binding UjMertekegyseg, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <Button x:Name="AddItem_DB"
                                 Grid.Column="6"
                                 Width="120" Height="32"
                                 Content="Hozzáadás"
-                                Click="AddItem_DB_Click"/>
+                                Command="{Binding AddAlapanyagCommand}"/>
                     </Grid>
 
-                    <DataGrid x:Name="ItemDB" Grid.Row="1" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True" Grid.ColumnSpan="2">
+                    <DataGrid x:Name="ItemDB" 
+                              ItemsSource="{Binding AlapanyagLista}"
+                              Grid.Row="1" 
+                              Margin="10,0,10,10" 
+                              AutoGenerateColumns="False" 
+                              IsReadOnly="True" 
+                              CanUserSortColumns="True" 
+                              Grid.ColumnSpan="3">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Alapanyag ID"
                                                 Binding="{Binding AlapanyagID}"
