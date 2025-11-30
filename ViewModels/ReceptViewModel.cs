@@ -41,7 +41,6 @@ namespace RecipeUI.ViewModels
 
         public string SelectedRecipeText { get; private set; } = string.Empty;
 
-        // Parancsok
         public RelayCommand GenerateShoppingListCommand { get; }
         public RelayCommand AddToSelectedCommand { get; }
         public RelayCommand RemoveSelectedCommand { get; }
@@ -131,7 +130,6 @@ namespace RecipeUI.ViewModels
 
         private void GenerateShoppingList()
         {
-            //LoadSelectedRecipeDetails();
             ShoppingListRequested?.Invoke(this, EventArgs.Empty);
         }
         #endregion

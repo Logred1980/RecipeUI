@@ -56,7 +56,7 @@ namespace RecipeUI.ViewModels
             }
             catch
             {
-                // később: felhasználóbarát hibaüzenet
+                
             }
         }
 

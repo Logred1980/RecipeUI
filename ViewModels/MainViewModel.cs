@@ -97,7 +97,6 @@ namespace RecipeUI.ViewModels
         public void LoadStock() => RaktarVM.LoadStock();
         #endregion
 
-
         #region === Helper ===
         private void OnPropertyChanged(string name)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

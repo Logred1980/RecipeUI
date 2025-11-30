@@ -78,9 +78,6 @@ namespace RecipeUI.ViewModels
                 UjAlapanyagNev = string.Empty;
                 UjMertekegyseg = string.Empty;
 
-                MessageBox.Show("Az alapanyag sikeresen hozzáadva.", "Siker",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-
                 LoadIngredients();
             }
             catch (Exception ex)

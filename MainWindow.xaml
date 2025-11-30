@@ -161,7 +161,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Text="Kiválasztott recept részletei" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBlock Text="Recept részletei" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
                             <TextBlock Grid.Row="1"
                                        Text="{Binding SelectedRecipeText}"

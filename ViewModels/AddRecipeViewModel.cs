@@ -65,26 +65,22 @@ namespace RecipeUI.ViewModels
 
         #endregion
 
-        #region === Konstruktor és inicializálás ===
+        #region === Konstruktor ===
 
         public AddRecipeViewModel(IReceptSzerviz service)
         {
             _service = service;
 
-            // Kezdő üres sor
             Sorok.Add(new AddRecipeRow());
 
-            // Alapanyagok betöltése
             Alapanyagok.Clear();
             foreach (var item in _service.ListazAlapanyagok())
                 Alapanyagok.Add(item);
 
-            // Sorok figyelése (mértékegység és Save engedélyezés)
             Sorok.CollectionChanged += Sorok_CollectionChanged;
             foreach (var r in Sorok)
                 HookRow(r);
 
-            // Parancsok
             CloseCommand = new RelayCommand(_ => OnCloseRequested());
             SaveCommand = new RelayCommand(_ => Save(), _ => CanSave());
         }
@@ -126,7 +122,7 @@ namespace RecipeUI.ViewModels
                     UpdateMertekegyseg(row);
 
                 if (e.PropertyName == nameof(AddRecipeRow.AlapanyagID) ||
-                    e.PropertyName == nameof(AddRecipeRow.Mennyiseg)) // string -> requery
+                    e.PropertyName == nameof(AddRecipeRow.Mennyiseg))
                     CommandManager.InvalidateRequerySuggested();
             }
         }
@@ -154,7 +150,6 @@ namespace RecipeUI.ViewModels
             if (string.IsNullOrWhiteSpace(ReceptNev))
                 return false;
 
-            // legalább egy értelmes sor: van alapanyag és pozitív mennyiség (stringből parsolva)
             return Sorok.Any(r => r.AlapanyagID > 0 && TryGetPositiveQuantity(r.Mennyiseg, out _));
         }
 
@@ -163,7 +158,6 @@ namespace RecipeUI.ViewModels
             var nev = (ReceptNev ?? string.Empty).Trim();
             var leiras = (Leiras ?? string.Empty).Trim();
 
-            // A szerviz Dictionary-t vár (alapanyagId -> összegzett mennyiség)
             var hozzavalok = new Dictionary<int, decimal>();
 
             foreach (var r in Sorok)
@@ -194,9 +188,6 @@ namespace RecipeUI.ViewModels
                     return;
                 }
 
-                MessageBox.Show("Recept elmentve.", "Siker",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-
                 OnCloseRequested();
             }
             catch (Exception ex)
@@ -208,20 +199,12 @@ namespace RecipeUI.ViewModels
 
         #endregion
 
-        #region === Parancs-kezelők (egyebek) ===
-
         private void OnCloseRequested()
         {
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        #endregion
-
-        #region === Segéd: PropertyChanged ===
-
         private void OnPropertyChanged(string name)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-        #endregion
     }
 }
