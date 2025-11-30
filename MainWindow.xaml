@@ -164,7 +164,7 @@
                             <TextBlock Text="Recept részletei" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
                             <TextBlock Grid.Row="1"
-                                       Text="{Binding SelectedRecipeText}"
+                                       Text="{Binding ReceptVM.SelectedRecipeText}"
                                        TextWrapping="Wrap"
                                        Margin="0,0,0,6"/>
 
@@ -233,18 +233,20 @@
 
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Alapanyag:"/>
                         <ComboBox x:Name="CmbAlapanyag"
-                                  Grid.Column="1" 
+                                  Grid.Column="1"
                                   Height="28"
                                   DisplayMemberPath="AlapanyagNev"
-                                  SelectedItem="{Binding SelectedAlapanyag, Mode=TwoWay}"
-                                  ItemsSource="{Binding AlapanyagLista}"/>
+                                  ItemsSource="{Binding AlapanyagLista}"
+                                  SelectedItem="{Binding RaktarVM.SelectedAlapanyag, Mode=TwoWay}" />
 
                         <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,6,0" Text="Mennyiség:"/>
-                        <TextBox x:Name="TxtMennyiseg" 
-                                 Grid.Column="4" 
-                                 Height="28" 
+                        <TextBox x:Name="TxtMennyiseg"
+                                 Grid.Column="4"
+                                 Height="28"
                                  VerticalContentAlignment="Center"
-                                 Text="{Binding UjMennyiseg, UpdateSourceTrigger=PropertyChanged}"/>
+                                 Text="{Binding RaktarVM.UjMennyiseg,
+                                                Mode=TwoWay,
+                                                UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock x:Name="LblUnit"
                                    Grid.Column="5"
@@ -301,18 +303,23 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Alapanyag neve:"/>
-                        <TextBox   x:Name="TxtAlapanyagNev" 
-                                   Grid.Column="1" 
-                                   Height="28" 
-                                   VerticalContentAlignment="Center" 
-                                   Text="{Binding UjAlapanyagNev, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBox   x:Name="TxtAlapanyagNev"
+                                   Grid.Column="1"
+                                   Height="28"
+                                   VerticalContentAlignment="Center"
+                                   Text="{Binding HozzavalokVM.UjAlapanyagNev,
+                                                  Mode=TwoWay,
+                                                  UpdateSourceTrigger=PropertyChanged}"/>
+
 
                         <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,6,0" Text="Mértékegység:"/>
-                        <TextBox   x:Name="TxtMertekegyseg" 
-                                   Grid.Column="4" 
-                                   Height="28" 
-                                   VerticalContentAlignment="Center" 
-                                   Text="{Binding UjMertekegyseg, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBox   x:Name="TxtMertekegyseg"
+                                   Grid.Column="4"
+                                   Height="28"
+                                   VerticalContentAlignment="Center"
+                                   Text="{Binding HozzavalokVM.UjMertekegyseg,
+                                                  Mode=TwoWay,
+                                                  UpdateSourceTrigger=PropertyChanged}"/>
 
                         <Button x:Name="AddItem_DB"
                                 Grid.Column="6"
